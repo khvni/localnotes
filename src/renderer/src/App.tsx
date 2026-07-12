@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Panel } from './components/panel'
 import { NoteEditor } from './components/note-editor'
 import { ConfirmDelete } from './components/confirm-delete'
@@ -26,7 +26,11 @@ export default function App(): React.JSX.Element {
     await window.localnotes.settings.setLastNote(opened.id)
   }, [])
 
+  const initialized = useRef(false)
+
   useEffect(() => {
+    if (initialized.current) return
+    initialized.current = true
     queueMicrotask(async () => {
       const settings = await window.localnotes.settings.get()
       await openNote(settings.lastNoteId)
