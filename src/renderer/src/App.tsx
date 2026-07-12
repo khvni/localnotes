@@ -74,6 +74,7 @@ export default function App(): React.JSX.Element {
         open={confirmingDelete && note !== null}
         onConfirm={() => void deleteCurrent()}
         onCancel={() => setConfirmingDelete(false)}
+        onClosed={() => document.querySelector<HTMLElement>('.note-editor')?.focus()}
       />
     </Panel>
   )

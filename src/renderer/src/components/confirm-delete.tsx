@@ -13,16 +13,24 @@ export function ConfirmDelete({
   title,
   open,
   onConfirm,
-  onCancel
+  onCancel,
+  onClosed
 }: {
   title: string
   open: boolean
   onConfirm: () => void
   onCancel: () => void
+  onClosed?: () => void
 }): React.JSX.Element {
   return (
     <AlertDialog open={open} onOpenChange={(v) => !v && onCancel()}>
       <AlertDialogContent
+        onCloseAutoFocus={(e) => {
+          if (onClosed) {
+            e.preventDefault()
+            onClosed()
+          }
+        }}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.preventDefault()
