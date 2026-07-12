@@ -1,24 +1,43 @@
+import { useCallback, useEffect, useState } from 'react'
 import { Panel } from './components/panel'
-import { useNotes } from './hooks/use-notes'
+import { NoteEditor } from './components/note-editor'
+import type { Note } from '../../shared/types'
 
 export default function App(): React.JSX.Element {
-  const { notes, settings } = useNotes()
+  const [note, setNote] = useState<Note | null>(null)
+  const [editorKey, setEditorKey] = useState(0)
+
+  const openNote = useCallback(async (id: string | null) => {
+    const existing = id ? await window.localnotes.notes.read(id) : null
+    if (existing) {
+      setNote(existing)
+      setEditorKey((k) => k + 1)
+      await window.localnotes.settings.setLastNote(existing.id)
+      return
+    }
+    const list = await window.localnotes.notes.list()
+    const target = list[0] ? await window.localnotes.notes.read(list[0].id) : null
+    const opened = target ?? (await window.localnotes.notes.create())
+    setNote(opened)
+    setEditorKey((k) => k + 1)
+    await window.localnotes.settings.setLastNote(opened.id)
+  }, [])
+
+  useEffect(() => {
+    queueMicrotask(async () => {
+      const settings = await window.localnotes.settings.get()
+      await openNote(settings.lastNoteId)
+    })
+  }, [openNote])
+
+  const handleSaved = useCallback((id: string) => {
+    setNote((prev) => (prev ? { ...prev, id } : prev))
+    void window.localnotes.settings.setLastNote(id)
+  }, [])
 
   return (
     <Panel>
-      <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
-        <p className="text-xs text-muted-foreground">
-          {settings ? `Notes folder: ${settings.notesDir}` : 'Loading…'}
-        </p>
-        <ul className="mt-2 space-y-1 overflow-y-auto">
-          {notes.map((note) => (
-            <li key={note.id} className="text-sm">
-              {note.pinned ? '📌 ' : ''}
-              {note.title}
-            </li>
-          ))}
-        </ul>
-      </div>
+      {note && <NoteEditor key={editorKey} note={note} onSaved={handleSaved} />}
     </Panel>
   )
 }

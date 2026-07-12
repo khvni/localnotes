@@ -1,0 +1,143 @@
+/* Typeset-inspired editorial typography for rendered markdown
+   (scale adapted from shadcn typeset). */
+
+.note-editor {
+  outline: none;
+  user-select: text;
+  cursor: text;
+  min-height: 100%;
+  font-size: 0.9375rem;
+  line-height: 1.65;
+  color: var(--foreground);
+}
+
+.note-editor > * + * {
+  margin-top: 0.625em;
+}
+
+.note-editor h1,
+.note-editor h2,
+.note-editor h3,
+.note-editor h4,
+.note-editor h5,
+.note-editor h6 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  text-wrap: pretty;
+}
+
+.note-editor h1 {
+  font-size: 1.5rem;
+  margin-top: 1em;
+}
+
+.note-editor h2 {
+  font-size: 1.25rem;
+  margin-top: 1em;
+}
+
+.note-editor h3 {
+  font-size: 1.125rem;
+  margin-top: 0.875em;
+}
+
+.note-editor h4,
+.note-editor h5,
+.note-editor h6 {
+  font-size: 1rem;
+  margin-top: 0.75em;
+}
+
+.note-editor > :first-child {
+  margin-top: 0;
+}
+
+.note-editor p {
+  text-wrap: pretty;
+}
+
+.note-editor a {
+  color: var(--primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.note-editor blockquote {
+  border-left: 2px solid var(--border);
+  padding-left: 1em;
+  color: var(--muted-foreground);
+}
+
+.note-editor code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.875em;
+  background: var(--muted);
+  border-radius: 4px;
+  padding: 0.15em 0.35em;
+}
+
+.note-editor pre {
+  background: var(--muted);
+  border-radius: var(--radius-md);
+  padding: 0.75em 1em;
+  overflow-x: auto;
+}
+
+.note-editor pre code {
+  background: none;
+  padding: 0;
+}
+
+.note-editor ul,
+.note-editor ol {
+  padding-left: 1.5em;
+}
+
+.note-editor ul {
+  list-style: disc;
+}
+
+.note-editor ol {
+  list-style: decimal;
+}
+
+.note-editor li + li {
+  margin-top: 0.2em;
+}
+
+.note-editor hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 1.25em 0;
+}
+
+/* Task lists */
+.note-editor ul[data-type='taskList'] {
+  list-style: none;
+  padding-left: 0.25em;
+}
+
+.note-editor ul[data-type='taskList'] li {
+  display: flex;
+  gap: 0.5em;
+  align-items: baseline;
+}
+
+.note-editor ul[data-type='taskList'] li > label {
+  flex: 0 0 auto;
+}
+
+.note-editor ul[data-type='taskList'] li[data-checked='true'] > div {
+  color: var(--muted-foreground);
+  text-decoration: line-through;
+}
+
+/* Placeholder */
+.note-editor p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
