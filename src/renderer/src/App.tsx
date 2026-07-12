@@ -1,11 +1,14 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Panel } from './components/panel'
 import { NoteEditor } from './components/note-editor'
+import { ConfirmDelete } from './components/confirm-delete'
+import { useAppHotkeys } from './hooks/use-app-hotkeys'
 import type { Note } from '../../shared/types'
 
 export default function App(): React.JSX.Element {
   const [note, setNote] = useState<Note | null>(null)
   const [editorKey, setEditorKey] = useState(0)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   const openNote = useCallback(async (id: string | null) => {
     const existing = id ? await window.localnotes.notes.read(id) : null
@@ -35,9 +38,39 @@ export default function App(): React.JSX.Element {
     void window.localnotes.settings.setLastNote(id)
   }, [])
 
+  const newNote = useCallback(async () => {
+    const created = await window.localnotes.notes.create()
+    setNote(created)
+    setEditorKey((k) => k + 1)
+    await window.localnotes.settings.setLastNote(created.id)
+  }, [])
+
+  const deleteCurrent = useCallback(async () => {
+    if (!note) return
+    setConfirmingDelete(false)
+    await window.localnotes.notes.delete(note.id)
+    setNote(null)
+    await openNote(null)
+  }, [note, openNote])
+
+  const hotkeyHandlers = useMemo(
+    () => ({
+      onNewNote: () => void newNote(),
+      onDeleteNote: () => setConfirmingDelete(true)
+    }),
+    [newNote]
+  )
+  useAppHotkeys(hotkeyHandlers)
+
   return (
     <Panel>
       {note && <NoteEditor key={editorKey} note={note} onSaved={handleSaved} />}
+      <ConfirmDelete
+        title={note?.title ?? ''}
+        open={confirmingDelete && note !== null}
+        onConfirm={() => void deleteCurrent()}
+        onCancel={() => setConfirmingDelete(false)}
+      />
     </Panel>
   )
 }
