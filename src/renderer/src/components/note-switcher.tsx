@@ -130,6 +130,7 @@ export function NoteSwitcher({
         open={confirming !== null}
         onConfirm={() => void deleteConfirmed()}
         onCancel={() => setConfirming(null)}
+        onClosed={() => inputRef.current?.focus()}
       />
     </div>
   )
