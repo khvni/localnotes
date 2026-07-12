@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Panel } from './components/panel'
-import { NoteEditor } from './components/note-editor'
+import { NoteEditor, type NoteEditorHandle } from './components/note-editor'
 import { ConfirmDelete } from './components/confirm-delete'
 import { NoteSwitcher } from './components/note-switcher'
 import { useAppHotkeys } from './hooks/use-app-hotkeys'
@@ -11,6 +11,7 @@ export default function App(): React.JSX.Element {
   const [editorKey, setEditorKey] = useState(0)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
   const [browsing, setBrowsing] = useState(false)
+  const editorRef = useRef<NoteEditorHandle>(null)
 
   const openNote = useCallback(async (id: string | null) => {
     const existing = id ? await window.localnotes.notes.read(id) : null
@@ -54,6 +55,7 @@ export default function App(): React.JSX.Element {
   const deleteCurrent = useCallback(async () => {
     if (!note) return
     setConfirmingDelete(false)
+    editorRef.current?.discardPendingSave()
     await window.localnotes.notes.delete(note.id)
     setNote(null)
     await openNote(null)
@@ -75,7 +77,7 @@ export default function App(): React.JSX.Element {
 
   return (
     <Panel>
-      {note && <NoteEditor key={editorKey} note={note} onSaved={handleSaved} />}
+      {note && <NoteEditor key={editorKey} ref={editorRef} note={note} onSaved={handleSaved} />}
       {browsing && (
         <NoteSwitcher
           currentId={note?.id ?? null}
@@ -86,6 +88,7 @@ export default function App(): React.JSX.Element {
           onClose={() => setBrowsing(false)}
           onDeleted={(id) => {
             if (note?.id === id) {
+              editorRef.current?.discardPendingSave()
               setNote(null)
               void openNote(null)
             }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useImperativeHandle, useRef } from 'react'
 import { Extension, InputRule } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -32,12 +32,18 @@ const TaskInputRule = Extension.create({
   }
 })
 
+export interface NoteEditorHandle {
+  discardPendingSave: () => void
+}
+
 export function NoteEditor({
   note,
-  onSaved
+  onSaved,
+  ref
 }: {
   note: Note
   onSaved: (id: string) => void
+  ref?: React.Ref<NoteEditorHandle>
 }): React.JSX.Element {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const noteId = useRef(note.id)
@@ -63,6 +69,17 @@ export function NoteEditor({
       }
     })
   }, [])
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      discardPendingSave: () => {
+        if (saveTimer.current) clearTimeout(saveTimer.current)
+        pendingMarkdown.current = null
+      }
+    }),
+    []
+  )
 
   const editor = useEditor({
     extensions: [
