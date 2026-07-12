@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Extension, InputRule } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Placeholder from '@tiptap/extension-placeholder'
@@ -9,6 +10,27 @@ import type { Note } from '../../../shared/types'
 import './note-editor.css'
 
 const SAVE_DEBOUNCE_MS = 400
+
+// Converts "[ ] " / "[x] " typed at the start of a list item (or paragraph)
+// into a task item, so the markdown habit of typing "- [ ] " just works.
+const TaskInputRule = Extension.create({
+  name: 'taskInputRule',
+  addInputRules() {
+    return [
+      new InputRule({
+        find: /^\[( |x)\]\s$/,
+        handler: ({ range, match, chain }) => {
+          const checked = match[1] === 'x'
+          chain()
+            .deleteRange(range)
+            .toggleTaskList()
+            .updateAttributes('taskItem', { checked })
+            .run()
+        }
+      })
+    ]
+  }
+})
 
 export function NoteEditor({
   note,
@@ -28,6 +50,7 @@ export function NoteEditor({
       }),
       TaskList,
       TaskItem.configure({ nested: true }),
+      TaskInputRule,
       Placeholder.configure({ placeholder: 'Start typing…' }),
       Markdown.configure({ html: false, linkify: true, transformPastedText: true })
     ],
