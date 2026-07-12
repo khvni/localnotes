@@ -1,48 +1,25 @@
-import { app, BrowserWindow, shell } from 'electron'
-import { join } from 'node:path'
+import { app, BrowserWindow } from 'electron'
 import { registerIpc } from './ipc'
+import { createPanel, registerGlobalShortcuts, unregisterGlobalShortcuts } from './window'
 
-const isDev = !app.isPackaged
-
-function createWindow(): BrowserWindow {
-  const win = new BrowserWindow({
-    width: 720,
-    height: 480,
-    show: false,
-    autoHideMenuBar: true,
-    webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true
-    }
-  })
-
-  win.on('ready-to-show', () => win.show())
-
-  win.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
-    return { action: 'deny' }
-  })
-
-  if (isDev && process.env.ELECTRON_RENDERER_URL) {
-    win.loadURL(process.env.ELECTRON_RENDERER_URL)
-  } else {
-    win.loadFile(join(__dirname, '../renderer/index.html'))
-  }
-
-  return win
-}
-
+// Localnotes lives in the background: closing the panel hides it, and the
+// Opt+N (Alt+N) global shortcut brings it back.
 app.whenReady().then(() => {
+  if (process.platform === 'darwin') app.dock?.hide()
+
   registerIpc()
-  createWindow()
+  createPanel()
+  registerGlobalShortcuts()
 
   app.on('activate', () => {
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) createPanel()
   })
 })
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') app.quit()
+  // Keep running in the background; the global shortcut re-creates the panel.
+})
+
+app.on('will-quit', () => {
+  unregisterGlobalShortcuts()
 })

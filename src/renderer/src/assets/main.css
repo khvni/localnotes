@@ -76,7 +76,8 @@
     @apply border-border outline-ring/50;
   }
   body {
-    @apply bg-background text-foreground;
+    /* Transparent so the frameless panel's rounded corners show through. */
+    @apply bg-transparent text-foreground;
     /* Desktop app conventions (per Raycast's deep dive): no text selection
        chrome outside the editor, no overscroll, native-feeling cursor. */
     user-select: none;
