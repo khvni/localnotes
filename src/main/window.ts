@@ -22,16 +22,15 @@ export function createPanel(): BrowserWindow {
     y: workArea.y + Math.round((workArea.height - PANEL_HEIGHT) / 3),
     show: false,
     frame: false,
-    transparent: true,
+    // Transparent windows are not resizable on Windows (Electron limitation).
+    transparent: process.platform !== 'win32',
     resizable: true,
     fullscreenable: false,
     minimizable: false,
-    maximizable: false,
+    maximizable: true,
     skipTaskbar: true,
     alwaysOnTop: true,
     hasShadow: true,
-    vibrancy: 'under-window',
-    visualEffectState: 'active',
     roundedCorners: true,
     minWidth: 400,
     minHeight: 300,
@@ -55,9 +54,19 @@ export function createPanel(): BrowserWindow {
     panel = null
   })
 
+  const SAFE_PROTOCOLS = new Set(['https:', 'http:', 'mailto:'])
+
   panel.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url)
+    try {
+      if (SAFE_PROTOCOLS.has(new URL(url).protocol)) shell.openExternal(url)
+    } catch {
+      // Malformed URL: ignore.
+    }
     return { action: 'deny' }
+  })
+
+  panel.webContents.on('will-navigate', (event, url) => {
+    if (url !== panel?.webContents.getURL()) event.preventDefault()
   })
 
   if (isDev && process.env.ELECTRON_RENDERER_URL) {

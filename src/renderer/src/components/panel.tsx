@@ -10,7 +10,7 @@ export function Panel({
   return (
     <div
       className={cn(
-        'flex h-screen w-screen flex-col overflow-hidden rounded-xl border border-border/60 bg-background/90 shadow-2xl backdrop-blur-xl',
+        'flex h-screen w-screen flex-col overflow-hidden rounded-xl border border-border/60 bg-background shadow-2xl',
         className
       )}
     >

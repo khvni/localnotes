@@ -78,6 +78,10 @@
   body {
     /* Transparent so the frameless panel's rounded corners show through. */
     @apply bg-transparent text-foreground;
+    /* System font by default. */
+    font-family:
+      -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, Roboto, 'Helvetica Neue',
+      Arial, sans-serif;
     /* Desktop app conventions (per Raycast's deep dive): no text selection
        chrome outside the editor, no overscroll, native-feeling cursor. */
     user-select: none;

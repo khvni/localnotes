@@ -83,7 +83,7 @@ export function NoteSwitcher({
   }
 
   return (
-    <div className="absolute inset-0 z-10 flex flex-col rounded-xl bg-background/95 backdrop-blur-xl" onKeyDown={onKeyDown}>
+    <div className="absolute inset-0 z-10 flex flex-col rounded-xl bg-background" onKeyDown={onKeyDown}>
       <input
         ref={inputRef}
         value={query}
