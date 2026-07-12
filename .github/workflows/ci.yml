@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main, 'stack/**']
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run build
+      - name: deslop (AI slop scan)
+        run: |
+          BASE="${{ github.base_ref || 'main' }}"
+          git fetch origin "$BASE" || true
+          npx deslop -b "origin/$BASE" -j > slop-report.json || true
+          cat slop-report.json
+          if [ "$(jq '.bySeverity.high // 0' slop-report.json)" -gt 0 ]; then
+            echo "High severity slop detected"
+            exit 1
+          fi
