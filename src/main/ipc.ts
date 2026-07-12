@@ -1,6 +1,15 @@
 import { BrowserWindow, dialog, ipcMain } from 'electron'
 import { IPC } from '../shared/types'
-import { createNote, deleteNote, listNotes, readNote, setPinned, updateNote, watchNotesDir } from './notes-store'
+import {
+  createNote,
+  deleteNote,
+  listNotes,
+  readNote,
+  searchNotes,
+  setPinned,
+  updateNote,
+  watchNotesDir
+} from './notes-store'
 import { getSettings, updateSettings } from './settings'
 
 export function registerIpc(): void {
@@ -10,6 +19,7 @@ export function registerIpc(): void {
   ipcMain.handle(IPC.notesUpdate, (_e, id: string, content: string) => updateNote(id, content))
   ipcMain.handle(IPC.notesDelete, (_e, id: string) => deleteNote(id))
   ipcMain.handle(IPC.notesSetPinned, (_e, id: string, pinned: boolean) => setPinned(id, pinned))
+  ipcMain.handle(IPC.notesSearch, (_e, query: string) => searchNotes(query))
   ipcMain.handle(IPC.settingsGet, () => getSettings())
   ipcMain.handle(IPC.settingsSetLastNote, (_e, id: string | null) => updateSettings({ lastNoteId: id }))
 

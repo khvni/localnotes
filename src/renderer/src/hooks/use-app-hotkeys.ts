@@ -10,6 +10,8 @@ export function isMod(e: KeyboardEvent | React.KeyboardEvent): boolean {
 export function useAppHotkeys(handlers: {
   onNewNote: () => void
   onDeleteNote: () => void
+  onBrowse: () => void
+  browsing: boolean
 }): void {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent): void => {
@@ -21,9 +23,16 @@ export function useAppHotkeys(handlers: {
         return
       }
 
+      if (isMod(e) && !e.shiftKey && !e.altKey && key === 'p') {
+        e.preventDefault()
+        handlers.onBrowse()
+        return
+      }
+
       // Ctrl+X deletes the current note (Raycast Notes convention). Text cut
-      // still works: a non-collapsed selection takes priority.
-      if (e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && key === 'x') {
+      // still works: a non-collapsed selection takes priority. While the
+      // switcher is open it owns Ctrl+X for the highlighted note.
+      if (!handlers.browsing && e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey && key === 'x') {
         const selection = window.getSelection()
         if (selection && !selection.isCollapsed) return
         e.preventDefault()

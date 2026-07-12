@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Panel } from './components/panel'
 import { NoteEditor } from './components/note-editor'
 import { ConfirmDelete } from './components/confirm-delete'
+import { NoteSwitcher } from './components/note-switcher'
 import { useAppHotkeys } from './hooks/use-app-hotkeys'
 import type { Note } from '../../shared/types'
 
@@ -9,6 +10,7 @@ export default function App(): React.JSX.Element {
   const [note, setNote] = useState<Note | null>(null)
   const [editorKey, setEditorKey] = useState(0)
   const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [browsing, setBrowsing] = useState(false)
 
   const openNote = useCallback(async (id: string | null) => {
     const existing = id ? await window.localnotes.notes.read(id) : null
@@ -55,16 +57,37 @@ export default function App(): React.JSX.Element {
 
   const hotkeyHandlers = useMemo(
     () => ({
-      onNewNote: () => void newNote(),
-      onDeleteNote: () => setConfirmingDelete(true)
+      onNewNote: () => {
+        setBrowsing(false)
+        void newNote()
+      },
+      onDeleteNote: () => setConfirmingDelete(true),
+      onBrowse: () => setBrowsing((b) => !b),
+      browsing
     }),
-    [newNote]
+    [newNote, browsing]
   )
   useAppHotkeys(hotkeyHandlers)
 
   return (
     <Panel>
       {note && <NoteEditor key={editorKey} note={note} onSaved={handleSaved} />}
+      {browsing && (
+        <NoteSwitcher
+          currentId={note?.id ?? null}
+          onOpen={(id) => {
+            setBrowsing(false)
+            void openNote(id)
+          }}
+          onClose={() => setBrowsing(false)}
+          onDeleted={(id) => {
+            if (note?.id === id) {
+              setNote(null)
+              void openNote(null)
+            }
+          }}
+        />
+      )}
       <ConfirmDelete
         title={note?.title ?? ''}
         open={confirmingDelete && note !== null}

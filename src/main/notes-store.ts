@@ -105,6 +105,35 @@ export function setPinned(id: string, pinned: boolean): void {
   updateSettings({ pinnedIds: next })
 }
 
+export function searchNotes(query: string): NoteMeta[] {
+  const q = query.trim().toLowerCase()
+  if (!q) return listNotes()
+  const { notesDir } = getSettings()
+  const scored: Array<{ meta: NoteMeta; score: number }> = []
+  for (const meta of listNotes()) {
+    const title = meta.title.toLowerCase()
+    let score = 0
+    if (title.startsWith(q)) score = 100
+    else if (title.includes(q)) score = 80
+    else if (isSubsequence(q, title)) score = 50
+    else {
+      const content = readFileSync(join(notesDir, meta.id), 'utf8').toLowerCase()
+      if (content.includes(q)) score = 30
+    }
+    if (score > 0) scored.push({ meta, score: score + (meta.pinned ? 5 : 0) })
+  }
+  return scored.sort((a, b) => b.score - a.score).map((s) => s.meta)
+}
+
+function isSubsequence(needle: string, haystack: string): boolean {
+  let i = 0
+  for (const ch of haystack) {
+    if (ch === needle[i]) i++
+    if (i === needle.length) return true
+  }
+  return needle.length === 0
+}
+
 let watcher: FSWatcher | null = null
 
 export function watchNotesDir(onChange: () => void): void {

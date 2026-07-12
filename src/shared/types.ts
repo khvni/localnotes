@@ -29,6 +29,7 @@ export const IPC = {
   notesUpdate: 'notes:update',
   notesDelete: 'notes:delete',
   notesSetPinned: 'notes:setPinned',
+  notesSearch: 'notes:search',
   notesChanged: 'notes:changed',
   settingsGet: 'settings:get',
   settingsSetLastNote: 'settings:setLastNote',

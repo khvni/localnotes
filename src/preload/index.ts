@@ -12,6 +12,7 @@ const api = {
     delete: (id: string): Promise<void> => ipcRenderer.invoke(IPC.notesDelete, id),
     setPinned: (id: string, pinned: boolean): Promise<void> =>
       ipcRenderer.invoke(IPC.notesSetPinned, id, pinned),
+    search: (query: string): Promise<NoteMeta[]> => ipcRenderer.invoke(IPC.notesSearch, query),
     onChanged: (cb: () => void): (() => void) => {
       const listener = (): void => cb()
       ipcRenderer.on(IPC.notesChanged, listener)
