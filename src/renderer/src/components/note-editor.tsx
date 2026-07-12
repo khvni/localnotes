@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { Extension, InputRule } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
@@ -41,6 +41,28 @@ export function NoteEditor({
 }): React.JSX.Element {
   const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const noteId = useRef(note.id)
+  const pendingMarkdown = useRef<string | null>(null)
+  const saveChain = useRef<Promise<void>>(Promise.resolve())
+  const onSavedRef = useRef(onSaved)
+
+  useEffect(() => {
+    onSavedRef.current = onSaved
+  }, [onSaved])
+
+  // Saves are serialized on a promise chain so a rename (id change) is always
+  // observed before the next write — a stale id would re-create the old file.
+  const flushSave = useCallback(() => {
+    const markdown = pendingMarkdown.current
+    if (markdown === null) return
+    pendingMarkdown.current = null
+    saveChain.current = saveChain.current.then(async () => {
+      const { id } = await window.localnotes.notes.update(noteId.current, markdown)
+      if (id !== noteId.current) {
+        noteId.current = id
+        onSavedRef.current(id)
+      }
+    })
+  }, [])
 
   const editor = useEditor({
     extensions: [
@@ -60,15 +82,9 @@ export function NoteEditor({
       attributes: { class: 'note-editor' }
     },
     onUpdate: ({ editor }) => {
+      pendingMarkdown.current = editor.storage.markdown.getMarkdown()
       if (saveTimer.current) clearTimeout(saveTimer.current)
-      saveTimer.current = setTimeout(async () => {
-        const markdown = editor.storage.markdown.getMarkdown()
-        const { id } = await window.localnotes.notes.update(noteId.current, markdown)
-        if (id !== noteId.current) {
-          noteId.current = id
-          onSaved(id)
-        }
-      }, SAVE_DEBOUNCE_MS)
+      saveTimer.current = setTimeout(flushSave, SAVE_DEBOUNCE_MS)
     }
   })
 
@@ -79,8 +95,9 @@ export function NoteEditor({
   useEffect(() => {
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current)
+      flushSave()
     }
-  }, [])
+  }, [flushSave])
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6" onClick={() => editor?.commands.focus()}>
